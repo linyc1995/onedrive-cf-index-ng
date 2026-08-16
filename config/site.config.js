@@ -17,7 +17,7 @@ module.exports = {
   title: "我的OneDrive网盘",
 
   // The folder that you are to share publicly with onedrive-cf-index-ng. Use '/' if you want to share your root folder.
-  baseDirectory: process.env.BASE_DIRECTORY || 'D:\OneDrive\工作\资源',
+  baseDirectory: process.env.BASE_DIRECTORY || '/公开',
 
   // [OPTIONAL] This represents the maximum number of items that one directory lists, pagination supported.
   // Do note that this is limited up to 200 items by the upstream OneDrive API.
