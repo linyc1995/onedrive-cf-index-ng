@@ -1,23 +1,17 @@
 import axios from 'redaxios'
+
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 import { encodePath, getAccessToken } from '.'
+
 import apiConfig from '../../../config/api.config'
+
 import siteConfig from '../../../config/site.config'
+
 import { NextRequest, NextResponse } from 'next/server'
 
 export const runtime = 'edge'
 
-/**
- * Sanitize the search query
- *
- * @param query User search query, which may contain special characters
- * @returns Sanitised query string, which:
- * - encodes the '<' and '>' characters,
- * - replaces '?' and '/' characters with ' ',
- * - replaces ''' with ''''
- * Reference: https://stackoverflow.com/questions/41491222/single-quote-escaping-in-microsoft-graph.
- */
 function sanitiseQuery(query: string): string {
   const sanitisedQuery = query
     .replace(/'/g, "''")
@@ -29,20 +23,13 @@ function sanitiseQuery(query: string): string {
 }
 
 export default async function handler(req: NextRequest): Promise<Response> {
-  // Get access token from storage
   const accessToken = await getAccessToken()
 
-  // Query parameter from request
   const { q: searchQuery = '' } = Object.fromEntries(req.nextUrl.searchParams)
 
-  // TODO: Set edge function caching for faster load times
-
   if (typeof searchQuery === 'string') {
-    // Construct Microsoft Graph Search API URL, and perform search only under the base directory
-    const searchRootPath = encodePath(siteConfig.baseDirectory)
-    const encodedPath = searchRootPath === '' ? searchRootPath : searchRootPath + ':'
-
-    const searchApi = `${apiConfig.driveApi}/root${encodedPath}/search(q='${sanitiseQuery(searchQuery)}')`
+    // 微软搜索 API 不支持路径限制，从根目录搜索
+    const searchApi = `${apiConfig.driveApi}/root/search(q='${sanitiseQuery(searchQuery)}')`
 
     try {
       const { data } = await axios.get(searchApi, {
@@ -52,7 +39,20 @@ export default async function handler(req: NextRequest): Promise<Response> {
           top: siteConfig.maxItems,
         },
       })
-      return NextResponse.json(data.value, {
+
+      // ✅ 新增：过滤搜索结果，只保留在 baseDirectory 下的文件
+      const baseDir = siteConfig.baseDirectory === '/' ? '' : siteConfig.baseDirectory.replace(/\/$/, '')
+      const filteredResults = data.value.filter((item: any) => {
+        if (!item.parentReference?.path) return false
+        // parentReference.path 格式: /drive/root:/path/to/file
+        const itemPath = item.parentReference.path.split('root:')[1] || ''
+        // 如果 baseDirectory 是根目录，不过滤
+        if (baseDir === '') return true
+        // 只保留在 baseDirectory 下的文件
+        return itemPath.startsWith(baseDir)
+      })
+
+      return NextResponse.json(filteredResults, {
         headers: {
           'Cache-Control': apiConfig.cacheControlHeader,
         },
