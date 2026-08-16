@@ -39,7 +39,7 @@ export default async function handler(req: NextRequest): Promise<Response> {
 
   if (typeof searchQuery === 'string') {
     // Construct Microsoft Graph Search API URL, and perform search only under the base directory
-    const searchRootPath = encodePath('/')
+    const searchRootPath = encodePath(siteConfig.baseDirectory)
     const encodedPath = searchRootPath === '' ? searchRootPath : searchRootPath + ':'
 
     const searchApi = `${apiConfig.driveApi}/root${encodedPath}/search(q='${sanitiseQuery(searchQuery)}')`
