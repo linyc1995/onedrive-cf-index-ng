@@ -35,16 +35,13 @@ import { PreviewContainer } from './previews/Containers'
 import FolderListLayout from './FolderListLayout'
 import FolderGridLayout from './FolderGridLayout'
 
-// Disabling SSR for some previews
+// 禁用服务端渲染的预览组件
 const EPUBPreview = dynamic(() => import('./previews/EPUBPreview'), {
   ssr: false,
 })
 
 /**
- * Convert url query into path string
- *
- * @param query Url query property
- * @returns Path string
+ * 将 URL 查询参数转换为路径字符串
  */
 const queryToPath = (query?: ParsedUrlQuery) => {
   if (query) {
@@ -56,7 +53,7 @@ const queryToPath = (query?: ParsedUrlQuery) => {
   return '/'
 }
 
-// Render the icon of a folder child (may be a file or a folder), use emoji if the name of the child contains emoji
+// 处理文件名中的 emoji 图标
 const renderEmoji = (name: string) => {
   const emoji = emojiRegex().exec(name)
   return { render: emoji && !emoji.index, emoji }
@@ -134,9 +131,7 @@ export const Checkbox: FC<{
 export const Downloading: FC<{ title: string; style: string }> = ({ title, style }) => {
   return (
     <span title={title} className={`${style} rounded`} role="status">
-      <LoadingIcon
-        className="svg-inline--fa inline-block h-4 w-4 animate-spin"
-      />
+      <LoadingIcon className="svg-inline--fa inline-block h-4 w-4 animate-spin" />
     </span>
   )
 }
@@ -155,7 +150,7 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
   const { data, error, size, setSize } = useProtectedSWRInfinite(path)
 
   if (error) {
-    // If error includes 403 which means the user has not completed initial setup, redirect to OAuth page
+    // 403 错误表示未完成初始授权，跳转到 OAuth 页面
     if (error.status === 403) {
       router.push('/onedrive-oauth/step-1')
       return <div />
@@ -183,15 +178,15 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
   const onlyOnePage = data && typeof data[0].next === 'undefined'
 
   if ('folder' in responses[0]) {
-    // Expand list of API returns into flattened file data
+    // 展开所有分页数据，合并为完整文件列表
     const folderChildren = [].concat(...responses.map(r => r.folder.value)) as OdFolderObject['value']
-    // Find README.md file to render
+    // 查找 README.md 文件用于渲染
     const readmeFile = folderChildren.find(c => c.name.toLowerCase() === 'readme.md')
 
-    // Filtered file list helper
+    // 筛选出纯文件（排除文件夹和密码文件）
     const getFiles = () => folderChildren.filter(c => !c.folder && c.name !== '.password')
 
-    // File selection
+    // 全选状态计算
     const genTotalSelected = (selected: { [key: string]: boolean }) => {
       const selectInfo = getFiles().map(c => Boolean(selected[c.id]))
       const [hasT, hasF] = [selectInfo.some(i => i), selectInfo.some(i => !i)]
@@ -220,7 +215,7 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
       }
     }
 
-    // Selected file download
+    // 选中文件下载处理
     const handleSelectedDownload = () => {
       const folderName = path.substring(path.lastIndexOf('/') + 1)
       const folder = folderName ? decodeURIComponent(folderName) : undefined
@@ -244,9 +239,7 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
         downloadMultipleFiles({ toastId, router, files, folder })
           .then(() => {
             setTotalGenerating(false)
-            toast.success('已完成选中文件的下载', {
-              id: toastId,
-            })
+            toast.success('已完成选中文件的下载', { id: toastId })
           })
           .catch(() => {
             setTotalGenerating(false)
@@ -255,7 +248,7 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
       }
     }
 
-    // Get selected file permalink
+    // 复制选中文件直链
     const handleSelectedPermalink = (baseUrl: string) => {
       return getFiles()
         .filter(c => selected[c.id])
@@ -266,7 +259,7 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
         .join('\n')
     }
 
-    // Folder recursive download
+    // 文件夹递归下载
     const handleFolderDownload = (path: string, id: string, name?: string) => () => {
       const files = (async function* () {
         for await (const { meta: c, path: p, isFolder, error } of traverseFolder(path)) {
@@ -303,7 +296,7 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
         })
     }
 
-    // Folder layout component props
+    // 传递给布局组件的参数
     const folderProps = {
       toast,
       path,
@@ -325,14 +318,14 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
         {layout.name === 'Grid' ? <FolderGridLayout {...folderProps} /> : <FolderListLayout {...folderProps} />}
 
         {!onlyOnePage && (
-          <div className="rounded-b border border-t-0 border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-            <div className="border-b border-gray-100 p-3 text-center text-sm text-gray-500 dark:border-gray-700">
+          <div className="rounded-b border border-t-0 border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200">
+            <div className="border-b border-gray-100 p-3 text-center text-sm text-gray-500 dark:border-gray-800">
               {`- 已显示 ${size} 页 ` +
                 (isLoadingMore ? `共 ... 个项目 -` : `共 ${folderChildren.length} 个项目 -`)}
             </div>
             <button
               className={`flex w-full items-center justify-center space-x-2 p-3 disabled:cursor-not-allowed ${
-                isLoadingMore || isReachingEnd ? 'opacity-60' : 'hover:bg-gray-50 dark:hover:bg-gray-850'
+                isLoadingMore || isReachingEnd ? 'opacity-60' : 'hover:bg-gray-50 dark:hover:bg-gray-900'
               }`}
               onClick={() => setSize(size + 1)}
               disabled={isLoadingMore || isReachingEnd}
@@ -363,6 +356,7 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
     )
   }
 
+  // 单文件预览逻辑
   if ('file' in responses[0] && responses.length === 1) {
     const file = responses[0].file as OdFileObject
     const previewType = getPreviewType(getExtension(file.name), { video: Boolean(file.video) })
