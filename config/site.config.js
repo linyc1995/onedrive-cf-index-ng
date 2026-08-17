@@ -3,63 +3,40 @@
  * the title, used Google fonts, site icons, contact info, etc.
  */
 module.exports = {
-  // This is what we use to identify who you are when you are initialising the website for the first time.
-  // Make sure this is exactly the same as the email address you use to sign into your Microsoft account.
-  // You can also put this in your worker's environment variable if you worry about
-  // your email being exposed in public.
+  // 你的 Microsoft 账户邮箱，保持你原有配置不变
   userPrincipalName: process.env.USER_PRINCIPLE_NAME || 'linyichen1995@outlook.com',
-
-  // [OPTIONAL] This is the website icon to the left of the title inside the navigation bar. It should be placed under the
-  // /public directory of your GitHub project (not your OneDrive folder!), and referenced here by its relative path to /public.
+  // 网站图标，保持你原有配置不变
   icon: '/icons/128.png',
-
-  // The name of your website. Present alongside your icon.
+  // 站点名称
   title: "OneDrive网盘",
-
-  // The folder that you are to share publicly with onedrive-cf-index-ng. Use '/' if you want to share your root folder.
+  // 共享根目录，保持你原有配置不变
   baseDirectory: process.env.BASE_DIRECTORY || '/公开',
-
-  // [OPTIONAL] This represents the maximum number of items that one directory lists, pagination supported.
-  // Do note that this is limited up to 200 items by the upstream OneDrive API.
+  // 单页最大展示数量
   maxItems: 100,
 
-  // [OPTIONAL] We use Google Fonts natively for font customisations.
-  // You can check and generate the required links and names at https://fonts.google.com.
-  // googleFontSans - the sans serif font used in onedrive-cf-index-ng.
-  googleFontSans: 'Noto Sans SC',
-  // googleFontMono - the monospace font used in onedrive-cf-index-ng.
-  googleFontMono: 'JetBrains Mono',
-  // googleFontLinks -  an array of links for referencing the google font assets.
-  googleFontLinks: ['https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap'],
+  // 已禁用 Google 字体，改用系统原生字体，提升加载速度
+  // googleFontSans: 'Noto Sans SC',
+  // googleFontMono: 'JetBrains Mono',
+  // googleFontLinks: ['https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap'],
 
-  // [OPTIONAL] The footer component of your website. You can write HTML here, but you need to escape double
-  // quotes - changing " to \". You can write anything here, and if you like badges, generate some with https://shields.io
-  footer:
-    '© 2026 OneDrive网盘 | 仅供个人使用',
+  // 页脚内容
+  footer: '© 2026 OneDrive网盘 | 仅供个人使用',
 
-  // [OPTIONAL] This is where you specify the folders that are password protected. It is an array of paths pointing to all
-  // the directories in which you have .password set. Check the documentation for details.
+  // 受密码保护的目录，保持你原有配置不变
   protectedRoutes: ['/Private', '/Demo/😎Another Private Folder Password 123'],
-
-  // [OPTIONAL] Use "" here if you want to remove this email address from the nav bar.
+  // 导航栏邮箱，留空则不显示
   email: '',
-
-  // [OPTIONAL] This is an array of names and links for setting your social information and links.
-  // In the latest update, all brand icons inside font awesome is supported and the icon to render is based on the name
-  // you provide. See the documentation for details.
+  // 社交链接，保持你原有配置不变
   links: [],
 
-  // This is a day.js-style datetime format string to format datetimes in the app. Ref to
-  // https://day.js.org/docs/en/display/format for detailed specification. The default value is ISO 8601 full datetime
-  // without timezone and replacing T with space.
+  // 日期时间格式
   datetimeFormat: 'YYYY-MM-DD HH:mm:ss',
 
-  // [OPTIONAL] OPDS catalog support for ebook readers.
-  // Note: This BYPASSES password protection for specific file types
+  // OPDS 电子书目录，保持你原有配置不变
   opds: {
     enabled: false,
     title: "OneDrive网盘",
-    description: 'OPDS catalog powered by onedrive-cf-index-ng.',
+    description: 'OPDS 目录由 onedrive-cf-index-ng 驱动',
     fileExtensions: ['.epub', '.pdf', '.mobi', '.azw3', '.azw', '.cbz', '.cbr'],
   },
 }
