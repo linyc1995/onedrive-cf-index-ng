@@ -4,10 +4,8 @@ import { FC, MouseEventHandler, SetStateAction, useEffect, useRef, useState } fr
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import toast, { Toaster } from 'react-hot-toast'
 import emojiRegex from 'emoji-regex'
-
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
-
 import useLocalStorage from '../utils/useLocalStorage'
 import { getPreviewType, preview } from '../utils/getPreviewType'
 import { useProtectedSWRInfinite } from '../utils/fetchWithSWR'
@@ -19,7 +17,6 @@ import {
   downloadTreelikeMultipleFiles,
   traverseFolder,
 } from './MultiFileDownloader'
-
 import { layouts } from './SwitchLayout'
 import Loading, { LoadingIcon } from './Loading'
 import FourOhFour from './FourOhFour'
@@ -35,7 +32,6 @@ import URLPreview from './previews/URLPreview'
 import ImagePreview from './previews/ImagePreview'
 import DefaultPreview from './previews/DefaultPreview'
 import { PreviewContainer } from './previews/Containers'
-
 import FolderListLayout from './FolderListLayout'
 import FolderGridLayout from './FolderGridLayout'
 
@@ -65,10 +61,12 @@ const renderEmoji = (name: string) => {
   const emoji = emojiRegex().exec(name)
   return { render: emoji && !emoji.index, emoji }
 }
+
 const formatChildName = (name: string) => {
   const { render, emoji } = renderEmoji(name)
   return render ? name.replace(emoji ? emoji[0] : '', '').trim() : name
 }
+
 export const ChildName: FC<{ name: string; folder?: boolean }> = ({ name, folder }) => {
   const original = formatChildName(name)
   const extension = folder ? '' : getRawExtension(original)
@@ -79,6 +77,7 @@ export const ChildName: FC<{ name: string; folder?: boolean }> = ({ name, folder
     </span>
   )
 }
+
 export const ChildIcon: FC<{ child: OdFolderChildren }> = ({ child }) => {
   const { render, emoji } = renderEmoji(child.name)
   return render ? (
@@ -95,7 +94,6 @@ export const Checkbox: FC<{
   indeterminate?: boolean
 }> = ({ checked, onChange, title, indeterminate }) => {
   const ref = useRef<HTMLInputElement>(null)
-
   useEffect(() => {
     if (ref.current) {
       ref.current.checked = Boolean(checked)
@@ -118,7 +116,7 @@ export const Checkbox: FC<{
   return (
     <span
       title={title}
-      className="inline-flex cursor-pointer items-center rounded p-1.5 hover:bg-gray-300 dark:hover:bg-gray-600"
+      className="inline-flex cursor-pointer items-center rounded p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700"
       onClick={handleClick}
     >
       <input
@@ -137,8 +135,6 @@ export const Downloading: FC<{ title: string; style: string }> = ({ title, style
   return (
     <span title={title} className={`${style} rounded`} role="status">
       <LoadingIcon
-        // Use fontawesome far theme via class `svg-inline--fa` to get style `vertical-align` only
-        // for consistent icon alignment, as class `align-*` cannot satisfy it
         className="svg-inline--fa inline-block h-4 w-4 animate-spin"
       />
     </span>
@@ -152,13 +148,10 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
   const [folderGenerating, setFolderGenerating] = useState<{
     [key: string]: boolean
   }>({})
-
   const router = useRouter()
   const hashedToken = getStoredToken(router.asPath)
   const [layout, _] = useLocalStorage('preferredLayout', layouts[0])
-
   const path = queryToPath(query)
-
   const { data, error, size, setSize } = useProtectedSWRInfinite(path)
 
   if (error) {
@@ -167,23 +160,22 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
       router.push('/onedrive-oauth/step-1')
       return <div />
     }
-
     return (
       <PreviewContainer>
         {error.status === 401 ? <Auth redirect={path} /> : <FourOhFour errorMsg={JSON.stringify(error.message)} />}
       </PreviewContainer>
     )
   }
+
   if (!data) {
     return (
       <PreviewContainer>
-        <Loading loadingText={'Loading ...'} />
+        <Loading loadingText={'加载中...'} />
       </PreviewContainer>
     )
   }
 
   const responses: any[] = data ? [].concat(...data) : []
-
   const isLoadingInitialData = !data && !error
   const isLoadingMore = isLoadingInitialData || (size > 0 && data && typeof data[size - 1] === 'undefined')
   const isEmpty = data?.[0]?.length === 0
@@ -193,7 +185,6 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
   if ('folder' in responses[0]) {
     // Expand list of API returns into flattened file data
     const folderChildren = [].concat(...responses.map(r => r.folder.value)) as OdFolderObject['value']
-
     // Find README.md file to render
     const readmeFile = folderChildren.find(c => c.name.toLowerCase() === 'readme.md')
 
@@ -249,18 +240,17 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
         el.remove()
       } else if (files.length > 1) {
         setTotalGenerating(true)
-
         const toastId = toast.loading(<DownloadingToast router={router} />)
         downloadMultipleFiles({ toastId, router, files, folder })
           .then(() => {
             setTotalGenerating(false)
-            toast.success('Finished downloading selected files.', {
+            toast.success('已完成选中文件的下载', {
               id: toastId,
             })
           })
           .catch(() => {
             setTotalGenerating(false)
-            toast.error('Failed to download selected files.', { id: toastId })
+            toast.error('选中文件下载失败', { id: toastId })
           })
       }
     }
@@ -281,7 +271,7 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
       const files = (async function* () {
         for await (const { meta: c, path: p, isFolder, error } of traverseFolder(path)) {
           if (error) {
-            toast.error(`Failed to download folder ${p}: ${error.status} ${error.message} Skipped it to continue.`)
+            toast.error(`文件夹 ${p} 下载失败: ${error.status} ${error.message} 已跳过继续下载`)
             continue
           }
           const hashedTokenForPath = getStoredToken(p)
@@ -296,7 +286,6 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
 
       setFolderGenerating({ ...folderGenerating, [id]: true })
       const toastId = toast.loading(<DownloadingToast router={router} />)
-
       downloadTreelikeMultipleFiles({
         toastId,
         router,
@@ -306,11 +295,11 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
       })
         .then(() => {
           setFolderGenerating({ ...folderGenerating, [id]: false })
-          toast.success('Finished downloading folder.', { id: toastId })
+          toast.success('文件夹下载完成', { id: toastId })
         })
         .catch(() => {
           setFolderGenerating({ ...folderGenerating, [id]: false })
-          toast.error('Failed to download folder.', { id: toastId })
+          toast.error('文件夹下载失败', { id: toastId })
         })
     }
 
@@ -333,18 +322,17 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
     return (
       <>
         <Toaster />
-
         {layout.name === 'Grid' ? <FolderGridLayout {...folderProps} /> : <FolderListLayout {...folderProps} />}
 
         {!onlyOnePage && (
-          <div className="rounded-b bg-white dark:bg-gray-900 dark:text-gray-100">
-            <div className="border-b border-gray-200 p-3 text-center font-mono text-sm text-gray-400 dark:border-gray-700">
-              {`- showing ${size} page(s) ` +
-                (isLoadingMore ? `of ... file(s) -` : `of ${folderChildren.length} file(s) -`)}
+          <div className="rounded-b border border-t-0 border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+            <div className="border-b border-gray-100 p-3 text-center text-sm text-gray-500 dark:border-gray-700">
+              {`- 已显示 ${size} 页 ` +
+                (isLoadingMore ? `共 ... 个项目 -` : `共 ${folderChildren.length} 个项目 -`)}
             </div>
             <button
               className={`flex w-full items-center justify-center space-x-2 p-3 disabled:cursor-not-allowed ${
-                isLoadingMore || isReachingEnd ? 'opacity-60' : 'hover:bg-gray-100 dark:hover:bg-gray-850'
+                isLoadingMore || isReachingEnd ? 'opacity-60' : 'hover:bg-gray-50 dark:hover:bg-gray-850'
               }`}
               onClick={() => setSize(size + 1)}
               disabled={isLoadingMore || isReachingEnd}
@@ -352,13 +340,13 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
               {isLoadingMore ? (
                 <>
                   <LoadingIcon className="inline-block h-4 w-4 animate-spin" />
-                  <span>{'Loading ...'}</span>{' '}
+                  <span>加载中...</span>{' '}
                 </>
               ) : isReachingEnd ? (
-                <span>{'No more files'}</span>
+                <span>没有更多文件了</span>
               ) : (
                 <>
-                  <span>{'Load more'}</span>
+                  <span>加载更多</span>
                   <FontAwesomeIcon icon="chevron-circle-down" />
                 </>
               )}
@@ -383,34 +371,24 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
       switch (previewType) {
         case preview.image:
           return <ImagePreview file={file} />
-
         case preview.text:
           return <TextPreview file={file} />
-
         case preview.code:
           return <CodePreview file={file} />
-
         case preview.markdown:
           return <MarkdownPreview file={file} path={path} />
-
         case preview.video:
           return <VideoPreview file={file} />
-
         case preview.audio:
           return <AudioPreview file={file} />
-
         case preview.pdf:
           return <PDFPreview file={file} />
-
         case preview.office:
           return <OfficePreview file={file} />
-
         case preview.epub:
           return <EPUBPreview file={file} />
-
         case preview.url:
           return <URLPreview file={file} />
-
         default:
           return <DefaultPreview file={file} />
       }
@@ -421,8 +399,9 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
 
   return (
     <PreviewContainer>
-      <FourOhFour errorMsg={`Cannot preview ${path}`} />
+      <FourOhFour errorMsg={`无法预览 ${path}`} />
     </PreviewContainer>
   )
 }
+
 export default FileListing
