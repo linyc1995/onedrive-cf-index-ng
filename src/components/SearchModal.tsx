@@ -4,14 +4,11 @@ import { Dispatch, Fragment, SetStateAction, useState } from 'react'
 import AwesomeDebouncePromise from 'awesome-debounce-promise'
 import { useAsync } from 'react-async-hook'
 import useConstant from 'use-constant'
-
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Dialog, DialogBackdrop, Transition } from '@headlessui/react'
-
 import type { OdDriveItem, OdSearchResult } from '../types'
 import { LoadingIcon } from './Loading'
-
 import { getFileIcon } from '../utils/getFileIcon'
 import { fetcher } from '../utils/fetchWithSWR'
 import siteConfig from '../../config/site.config'
@@ -47,7 +44,6 @@ function useDriveItemSearch() {
   const [query, setQuery] = useState('')
   const searchDriveItem = async (q: string) => {
     const { data } = await axios.get<OdSearchResult>(`/api/search?q=${q}`)
-
     // Map parentReference to the absolute path of the search result
     data.map(item => {
       item['path'] =
@@ -57,7 +53,6 @@ function useDriveItemSearch() {
           : // OneDrive for Business/Education does not, so we need extra steps here
             ''
     })
-
     return data
   }
 
@@ -92,7 +87,7 @@ function SearchResultItemTemplate({
     <Link
       href={driveItemPath}
       passHref
-      className={`flex items-center space-x-4 border-b border-gray-400/30 px-4 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-850 ${
+      className={`flex items-center space-x-4 border-b border-gray-200/30 px-4 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-850 ${
         disabled ? 'pointer-events-none cursor-not-allowed' : 'cursor-pointer'
       }`}
     >
@@ -101,7 +96,7 @@ function SearchResultItemTemplate({
         <div className="text-sm font-medium leading-8">{driveItem.name}</div>
         <div
           className={`overflow-hidden truncate font-mono text-xs opacity-60 ${
-            itemDescription === 'Loading ...' && 'animate-pulse'
+            itemDescription === '加载中...' && 'animate-pulse'
           }`}
         >
           {itemDescription}
@@ -129,7 +124,7 @@ function SearchResultItemLoadRemote({ result }: { result: OdSearchResult[number]
   }
   if (!data) {
     return (
-      <SearchResultItemTemplate driveItem={result} driveItemPath={''} itemDescription={'Loading ...'} disabled={true} />
+      <SearchResultItemTemplate driveItem={result} driveItemPath={''} itemDescription={'加载中...'} disabled={true} />
     )
   }
 
@@ -170,7 +165,6 @@ export default function SearchModal({
   setSearchOpen: Dispatch<SetStateAction<boolean>>
 }) {
   const { query, setQuery, results } = useDriveItemSearch()
-
   const closeSearchBox = () => {
     setSearchOpen(false)
     setQuery('')
@@ -201,22 +195,23 @@ export default function SearchModal({
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <div className="relative my-12 inline-block w-full max-w-3xl transform overflow-hidden rounded border-gray-400/30 text-left shadow-xl transition-all">
+            <div className="my-12 inline-block w-full max-w-3xl transform overflow-hidden rounded border border-gray-200 text-left shadow-sm transition-all">
               <Dialog.Title
                 as="h3"
-                className="flex items-center space-x-4 border-b border-gray-400/30 bg-gray-50 p-4 dark:bg-gray-800 dark:text-white"
+                className="flex items-center space-x-4 border-b border-gray-200 bg-gray-50 p-4 dark:bg-gray-800 dark:text-white"
               >
                 <FontAwesomeIcon icon="search" className="h-4 w-4" />
                 <input
                   type="text"
                   id="search-box"
                   className="w-full bg-transparent focus:outline-none focus-visible:outline-none"
-                  placeholder={'Search ...'}
+                  placeholder={'输入关键词搜索...'}
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                 />
-                <div className="rounded-lg bg-gray-200 px-2 py-1 text-xs font-medium dark:bg-gray-700">ESC</div>
+                <div className="rounded bg-gray-200 px-2 py-1 text-xs font-medium dark:bg-gray-700">ESC</div>
               </Dialog.Title>
+
               <div
                 className="max-h-[80vh] overflow-x-hidden overflow-y-scroll bg-white dark:bg-gray-900 dark:text-white"
                 onClick={closeSearchBox}
@@ -224,16 +219,18 @@ export default function SearchModal({
                 {results.loading && (
                   <div className="px-4 py-12 text-center text-sm font-medium">
                     <LoadingIcon className="svg-inline--fa mr-2 inline-block h-4 w-4 animate-spin" />
-                    <span>{'Loading ...'}</span>
+                    <span>搜索中...</span>
                   </div>
                 )}
+
                 {results.error && (
-                  <div className="px-4 py-12 text-center text-sm font-medium">{`Error: ${results.error.message}`}</div>
+                  <div className="px-4 py-12 text-center text-sm font-medium">{`搜索出错: ${results.error.message}`}</div>
                 )}
+
                 {results.result && (
                   <>
                     {results.result.length === 0 ? (
-                      <div className="px-4 py-12 text-center text-sm font-medium">{'Nothing here.'}</div>
+                      <div className="px-4 py-12 text-center text-sm font-medium">未找到匹配的文件或文件夹</div>
                     ) : (
                       results.result.map(result => <SearchResultItem key={result.id} result={result} />)
                     )}
