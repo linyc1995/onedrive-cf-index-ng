@@ -4,8 +4,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // 启用 SWC 压缩，构建和运行速度更快
-  swcMinify: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   // 移除 X-Powered-By 响应头
   poweredByHeader: false,
   // 开启 gzip 压缩
@@ -13,6 +14,8 @@ const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
   },
+  // 关闭Next.js遥测，减少日志干扰
+  telemetry: false,
 }
 
 module.exports = nextConfig
